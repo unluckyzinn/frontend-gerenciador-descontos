@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerenciador de Descontos</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">🏷️</div>
+    <div class="logo-text">Gerenciador<span>Descontos</span></div>
+  </div>
+  <div style="display:flex;gap:12px;align-items:center">
+    <div class="api-url" id="apiUrlDisplay" onclick="toggleUrlEditor()">
+      <span class="api-url-dot">●</span>
+      <span id="apiUrlText">localhost:8080</span>
+    </div>
+    <div class="status-pill" id="statusPill">
+      <div class="status-dot"></div>
+      <span id="statusText">conectando...</span>
+    </div>
+  </div>
+</header>
+
+<!-- LAYOUT -->
+<div class="main">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+
+    <!-- Config de URL -->
+    <div class="url-config" id="urlEditor" style="display:none">
+      <div class="section-label">URL da API</div>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="baseUrlInput" placeholder="https://gerenciador-descontos-api-tlp3-production.up.railway.app" />
+        <button class="btn btn-primary" onclick="salvarUrl()">OK</button>
+      </div>
+    </div>
+
+    <!-- Desconto Global -->
+    <div>
+      <div class="section-label">Desconto Global</div>
+      <div class="desconto-card">
+        <div class="desconto-valor" id="descontoDisplay">0%</div>
+        <div class="desconto-label">desconto aplicado a todos os produtos</div>
+        <div class="desconto-form">
+          <input type="number" id="descontoInput" placeholder="ex: 0.15" min="0" max="1" step="0.01" />
+          <button class="btn btn-primary" onclick="atualizarDesconto()">Aplicar</button>
+        </div>
+        <div style="font-size:0.65rem;color:var(--muted);margin-top:8px">Use valores entre 0 e 1 (ex: 0.20 = 20%)</div>
+      </div>
+    </div>
+
+    <!-- Cadastrar Produto -->
+    <div>
+      <div class="section-label">Novo Produto</div>
+      <div class="form-card">
+        <div class="tab-group">
+          <button class="tab active" onclick="switchTab('fisico', this)">📦 Físico</button>
+          <button class="tab" onclick="switchTab('digital', this)">💾 Digital</button>
+        </div>
+
+        <!-- Form Físico -->
+        <div id="formFisico">
+          <div class="form-group">
+            <label>NOME</label>
+            <input type="text" id="fisicoNome" placeholder="Nome do produto" />
+          </div>
+          <div class="form-group">
+            <label>PREÇO BASE (R$)</label>
+            <input type="number" id="fisicoPreco" placeholder="0.00" min="0" step="0.01" />
+          </div>
+          <div class="form-group">
+            <label>TAXA DE FRETE (R$)</label>
+            <input type="number" id="fisicoFrete" placeholder="0.00" min="0" step="0.01" />
+          </div>
+          <button class="btn btn-primary btn-full" onclick="cadastrarFisico()">+ Cadastrar Produto Físico</button>
+        </div>
+
+        <!-- Form Digital -->
+        <div id="formDigital" style="display:none">
+          <div class="form-group">
+            <label>NOME</label>
+            <input type="text" id="digitalNome" placeholder="Nome do produto" />
+          </div>
+          <div class="form-group">
+            <label>PREÇO BASE (R$)</label>
+            <input type="number" id="digitalPreco" placeholder="0.00" min="0" step="0.01" />
+          </div>
+          <button class="btn btn-primary btn-full" onclick="cadastrarDigital()">+ Cadastrar Produto Digital</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Busca por ID -->
+    <div>
+      <div class="section-label">Buscar por ID</div>
+      <div class="busca-card">
+        <div style="display:flex;gap:8px">
+          <input type="number" id="buscaId" placeholder="ID do produto" min="1" />
+          <button class="btn btn-ghost" onclick="buscarPorId()">Buscar</button>
+        </div>
+        <div class="resultado-busca" id="resultadoBusca"></div>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- CONTEÚDO -->
+  <main class="content">
+    <div class="content-header">
+      <div>
+        <div class="section-label" style="margin-bottom:4px">PRODUTOS CADASTRADOS</div>
+        <div class="content-title">Lista de Produtos</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <span class="count-badge" id="countBadge">0 produtos</span>
+        <button class="btn btn-ghost" onclick="carregarProdutos()">↻ Atualizar</button>
+      </div>
+    </div>
+
+    <div class="produto-grid" id="produtoGrid">
+      <div class="empty-state">
+        <div class="empty-icon">📦</div>
+        <div class="empty-text">Carregando produtos...</div>
+      </div>
+    </div>
+  </main>
+
+</div>
+
+<!-- Toast container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="script.js"></script>
+</body>
+</html>
