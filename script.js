@@ -1,4 +1,4 @@
-let BASE_URL = localStorage.getItem('api_base_url') || 'https://gerenciador-descontos-api-tlp3-production.up.railway.app';
+let BASE_URL = localStorage.getItem('api_base_url') || 'http://localhost:8080';
 let descontoAtual = 0;
 
 // ── INIT ──
@@ -131,8 +131,8 @@ function renderProdutos(produtos) {
     const isFisico = tipo === 'FISICO';
     const cor = isFisico ? 'var(--tag-fisico)' : 'var(--tag-digital)';
     const extraInfo = isFisico && p.taxaFrete !== undefined
-      ? `<div class="info-row"><span class="info-key">taxa de frete</span><span class="info-val">${formatBRL(p.taxaFrete)}</span></div>`
-      : '';
+        ? `<div class="info-row"><span class="info-key">taxa de frete</span><span class="info-val">${formatBRL(p.taxaFrete)}</span></div>`
+        : '';
 
     return `
       <div class="produto-card" style="--tipo-color:${cor}">
@@ -158,6 +158,12 @@ function renderProdutos(produtos) {
         <div class="produto-actions">
           <button class="btn btn-ghost" style="flex:1;font-size:0.75rem" onclick="calcularPreco(${p.id})">
             🏷️ Ver preço final
+          </button>
+          <button class="btn btn-ghost" style="font-size:0.75rem" onclick="abrirModal(${p.id}, '${tipo}', '${p.nome}', ${p.precoBase}, ${p.taxaFrete ?? 0})">
+            ✏️
+          </button>
+          <button class="btn btn-ghost" style="font-size:0.75rem;color:var(--accent2);border-color:rgba(255,107,107,0.2)" onclick="deletarProduto(${p.id})">
+            🗑️
           </button>
         </div>
       </div>`;
@@ -209,6 +215,69 @@ async function buscarPorId() {
   } catch {
     resultado.innerHTML = `<span style="color:var(--accent2)">✕ Erro na busca</span>`;
   }
+}
+
+// ── DELETAR ──
+async function deletarProduto(id) {
+  if (!confirm(`Deletar produto #${id}?`)) return;
+  try {
+    const r = await fetch(`${BASE_URL}/produtos/${id}`, { method: 'DELETE' });
+    if (r.ok) {
+      toast('Produto deletado!', 'success');
+      carregarProdutos();
+    } else {
+      toast('Erro ao deletar produto', 'error');
+    }
+  } catch { toast('Sem conexão com a API', 'error'); }
+}
+
+// ── MODAL DE EDIÇÃO ──
+function abrirModal(id, tipo, nome, preco, frete) {
+  document.getElementById('editId').value = id;
+  document.getElementById('editTipo').value = tipo;
+  document.getElementById('editNome').value = nome;
+  document.getElementById('editPreco').value = preco;
+  document.getElementById('editFrete').value = frete;
+  document.getElementById('editFreteGroup').style.display = tipo === 'FISICO' ? 'block' : 'none';
+  document.getElementById('modalTitulo').textContent = `Editar ${tipo === 'FISICO' ? 'Produto Físico' : 'Produto Digital'} #${id}`;
+  document.getElementById('modalOverlay').classList.add('active');
+}
+
+function fecharModal() {
+  document.getElementById('modalOverlay').classList.remove('active');
+}
+
+async function salvarEdicao() {
+  const id   = document.getElementById('editId').value;
+  const tipo = document.getElementById('editTipo').value;
+  const nome  = document.getElementById('editNome').value.trim();
+  const preco = parseFloat(document.getElementById('editPreco').value);
+  const frete = parseFloat(document.getElementById('editFrete').value);
+
+  if (!nome || isNaN(preco)) { toast('Preencha todos os campos', 'error'); return; }
+  if (tipo === 'FISICO' && isNaN(frete)) { toast('Preencha a taxa de frete', 'error'); return; }
+
+  const body = tipo === 'FISICO'
+      ? { nome, precoBase: preco, taxaFrete: frete }
+      : { nome, precoBase: preco };
+
+  const endpoint = tipo === 'FISICO' ? `fisico/${id}` : `digital/${id}`;
+
+  try {
+    const r = await fetch(`${BASE_URL}/produtos/${endpoint}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (r.ok) {
+      toast('Produto atualizado!', 'success');
+      fecharModal();
+      carregarProdutos();
+    } else {
+      const err = await r.json().catch(() => ({}));
+      toast(err.message || 'Erro ao editar', 'error');
+    }
+  } catch { toast('Sem conexão com a API', 'error'); }
 }
 
 // ── CADASTRAR FÍSICO ──
