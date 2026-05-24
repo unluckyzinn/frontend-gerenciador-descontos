@@ -1,4 +1,4 @@
-let BASE_URL = localStorage.getItem('api_base_url') || 'gerenciador-descontos-api-tlp3-production.up.railway.app';
+let BASE_URL = localStorage.getItem('api_base_url') || 'https://gerenciador-descontos-api-tlp3-production.up.railway.app';
 let descontoAtual = 0;
 
 // ── INIT ──
